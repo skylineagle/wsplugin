@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build pkg-config gcc gcovr libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libwebsockets-dev libssl-dev
+
+      - name: Configure
+        run: CC=gcc cmake -S . -B build -G Ninja -DBUILD_TESTING=ON -DENABLE_COVERAGE=ON
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Coverage
+        run: cmake --build build --target coverage
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            build/coverage.txt
+            build/coverage.xml
