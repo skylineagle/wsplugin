@@ -216,6 +216,10 @@ lws_callback_src (struct lws *wsi, enum lws_callback_reasons reason,
 
     switch (reason) {
 
+    /* ---- Allow browser clients that send no Sec-WebSocket-Protocol header ---- */
+    case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
+        return 0; /* 0 = allow, regardless of requested subprotocol */
+
     /* ---- SERVER: new incoming connection ---- */
     case LWS_CALLBACK_FILTER_NETWORK_CONNECTION:
         /* Called before user data is set up; we use the vhost user pointer */
@@ -403,6 +407,8 @@ gst_ws_src_start (GstBaseSrc *bsrc)
 
     static const struct lws_protocols protocols[] = {
         { "wsplugin", lws_callback_src, sizeof (WsSrcSession), 0, 0, NULL, 0 },
+        /* "default" entry catches clients that send no Sec-WebSocket-Protocol header */
+        { "default",  lws_callback_src, sizeof (WsSrcSession), 0, 0, NULL, 0 },
         LWS_PROTOCOL_LIST_TERM
     };
 

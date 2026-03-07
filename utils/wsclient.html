@@ -54,51 +54,57 @@
       // 1. Parse Query Parameters
       const params = new URLSearchParams(window.location.search);
       const host = params.get("host") || "localhost";
-      const port = params.get("port") || "8080";
+      const port = params.get("port") || "8765";
       const wsUrl = `ws://${host}:${port}`;
 
       addressDiv.textContent = `Target: ${wsUrl}`;
 
       // 2. Initialize WebSocket
-      const socket = new WebSocket(wsUrl);
-      socket.binaryType = "blob";
+      try {
+        const socket = new WebSocket(wsUrl);
+        socket.binaryType = "blob";
 
-      socket.onopen = () => {
-        statusDiv.textContent = "CONNECTED";
-        statusDiv.style.color = "#00ff00";
-        statusDiv.style.border = "1px solid #00ff00";
-      };
+        socket.onopen = () => {
+          statusDiv.textContent = "CONNECTED";
+          statusDiv.style.color = "#00ff00";
+          statusDiv.style.border = "1px solid #00ff00";
+        };
 
-      socket.onmessage = (event) => {
-        // Check if data is indeed a blob/image
-        console.log(event);
+        socket.onmessage = (event) => {
+          // Check if data is indeed a blob/image
+          console.log(event);
 
-        if (event.data instanceof Blob) {
-          const url = URL.createObjectURL(event.data);
+          if (event.data instanceof Blob) {
+            const url = URL.createObjectURL(event.data);
 
-          // Old URL cleanup to prevent memory leaks
-          const oldUrl = img.src;
-          img.src = url;
+            // Old URL cleanup to prevent memory leaks
+            const oldUrl = img.src;
+            img.src = url;
 
-          img.onload = () => {
-            if (oldUrl.startsWith("blob:")) {
-              URL.revokeObjectURL(oldUrl);
-            }
-          };
-        }
-      };
+            img.onload = () => {
+              if (oldUrl.startsWith("blob:")) {
+                URL.revokeObjectURL(oldUrl);
+              }
+            };
+          }
+        };
 
-      socket.onclose = (e) => {
-        statusDiv.textContent = "DISCONNECTED";
-        statusDiv.style.color = "#ff4444";
-        statusDiv.style.border = "1px solid #ff4444";
-        console.log("Socket closed:", e.reason);
-      };
+        socket.onclose = (e) => {
+          statusDiv.textContent = "DISCONNECTED";
+          statusDiv.style.color = "#ff4444";
+          statusDiv.style.border = "1px solid #ff4444";
+          console.log(e);
 
-      socket.onerror = (err) => {
-        statusDiv.textContent = "CONNECTION ERROR";
-        console.error("WS Error:", err);
-      };
+          console.log("Socket closed:", e.reason);
+        };
+
+        socket.onerror = (err) => {
+          statusDiv.textContent = "CONNECTION ERROR";
+          console.error("WS Error:", err);
+        };
+      } catch (error) {
+        console.error("Error:", error);
+      }
     </script>
   </body>
 </html>

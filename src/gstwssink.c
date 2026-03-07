@@ -239,10 +239,19 @@ static int
 lws_callback_sink (struct lws *wsi, enum lws_callback_reasons reason,
                    void *user, void *in, size_t len)
 {
+    /* wsi can be NULL for internal/protocol-level LWS callbacks; guard before
+     * dereferencing it to obtain our user-data pointer. */
+    if (!wsi)
+        return 0;
+
     GstWsSink    *self = (GstWsSink *) lws_context_user (lws_get_context (wsi));
     WsSinkClient *client = NULL;
 
     switch (reason) {
+
+    /* ---- Allow browser clients that send no Sec-WebSocket-Protocol header ---- */
+    case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
+        return 0; /* 0 = allow, regardless of requested subprotocol */
 
     /* ---- Server: new client connected ---- */
     case LWS_CALLBACK_ESTABLISHED:
@@ -387,6 +396,10 @@ gst_ws_sink_start (GstBaseSink *bsink)
 
     static const struct lws_protocols protocols[] = {
         { "wsplugin", lws_callback_sink, 0, 0, 0, NULL, 0 },
+        /* "default" entry catches browsers that send no Sec-WebSocket-Protocol
+         * header; LWS routes no-subprotocol WS upgrades through the entry
+         * named "default", so we register the same callback here as a fallback. */
+        { "default",  lws_callback_sink, 0, 0, 0, NULL, 0 },
         LWS_PROTOCOL_LIST_TERM
     };
 
