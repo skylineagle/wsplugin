@@ -352,6 +352,24 @@ wsplugin/
 
 ---
 
+## Known Issues
+
+### Browser `wsclient.html` requires explicit subprotocol
+
+`new WebSocket(url)` with no second argument sends **no** `Sec-WebSocket-Protocol` header. libwebsockets 4.x rejects this connection silently — `LWS_CALLBACK_ESTABLISHED` is never called and the browser shows an immediate connection error.
+
+**Workaround:** pass `"wsplugin"` as the subprotocol in the `WebSocket` constructor. `wsclient.html` already does this:
+
+```js
+const socket = new WebSocket(wsUrl, ["wsplugin"]);
+```
+
+If you are writing your own browser client, you must include the same second argument. Any standard WebSocket client library (Node.js `ws`, Python `websockets`, etc.) that lets you specify the subprotocol will also work by passing `"wsplugin"`.
+
+**Root cause:** libwebsockets routes incoming WebSocket upgrades by matching the `Sec-WebSocket-Protocol` request header against the registered protocol names. When the browser sends no header, LWS finds no match and drops the connection. The LWS 4.x API does not expose a clean way to register a true catch-all entry; the `"default"` and `"http"` fallback names that the documentation hints at do not reliably intercept no-subprotocol WebSocket upgrades in practice.
+
+---
+
 ## License
 
 LGPL-2.1 — same as the GStreamer framework itself.

@@ -61,7 +61,7 @@
 
       // 2. Initialize WebSocket
       try {
-        const socket = new WebSocket(wsUrl);
+        const socket = new WebSocket(wsUrl, ["wsplugin"]);
         socket.binaryType = "blob";
 
         socket.onopen = () => {
