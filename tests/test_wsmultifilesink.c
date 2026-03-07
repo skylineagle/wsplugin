@@ -232,18 +232,18 @@ ensure_gstreamer(void)
     }
 }
 
-static GstWsMultiFileSink *
+static GstDatedMultiFileSink *
 create_sink(void)
 {
     ensure_gstreamer();
     test_factory_make_should_fail = FALSE;
     test_fake_child_has_sink_pad = TRUE;
     test_ghost_pad_new_should_fail = FALSE;
-    return GST_WS_MULTI_FILE_SINK(g_object_new(GST_TYPE_WS_MULTI_FILE_SINK, NULL));
+    return GST_DATED_MULTI_FILE_SINK(g_object_new(GST_TYPE_DATED_MULTI_FILE_SINK, NULL));
 }
 
 static void
-destroy_sink(GstWsMultiFileSink *sink)
+destroy_sink(GstDatedMultiFileSink *sink)
 {
     gst_object_unref(sink);
     test_factory_make_should_fail = FALSE;
@@ -252,7 +252,7 @@ destroy_sink(GstWsMultiFileSink *sink)
 }
 
 static FakeMultiFileSink *
-get_child_sink(GstWsMultiFileSink *sink)
+get_child_sink(GstDatedMultiFileSink *sink)
 {
     return (FakeMultiFileSink *) gst_bin_get_by_name(GST_BIN(sink), "multifilesink");
 }
@@ -269,7 +269,7 @@ assert_date_segment(const gchar *value, gsize length)
 static void
 test_defaults_and_properties(void)
 {
-    GstWsMultiFileSink *sink = create_sink();
+    GstDatedMultiFileSink *sink = create_sink();
     FakeMultiFileSink *child = get_child_sink(sink);
     gchar *location = NULL;
     gchar *location_template = (gchar *) 0x1;
@@ -300,13 +300,13 @@ test_defaults_and_properties(void)
     g_assert_null(location_template);
     g_assert_cmpint(index, ==, 0);
     g_assert_false(post_messages);
-    g_assert_cmpint(next_file, ==, GST_WS_MULTI_FILE_SINK_NEXT_BUFFER);
+    g_assert_cmpint(next_file, ==, GST_DATED_MULTI_FILE_SINK_NEXT_BUFFER);
     g_assert_cmpuint(max_files, ==, 0);
     g_assert_cmpuint(max_file_size, ==, G_GUINT64_CONSTANT(2 * 1024 * 1024 * 1024));
     g_assert_cmpuint(max_file_duration, ==, GST_CLOCK_TIME_NONE);
     g_assert_false(aggregate_gops);
     g_assert_false(timestamp_utc);
-    g_assert_true(gst_element_register_wsmultifilesink(NULL));
+    g_assert_true(gst_element_register_datedmultifilesink(NULL));
 
     g_assert_nonnull(child);
     g_assert_cmpstr(child->location, ==, "%05d");
@@ -325,7 +325,7 @@ test_defaults_and_properties(void)
 static void
 test_forwarded_properties(void)
 {
-    GstWsMultiFileSink *sink = create_sink();
+    GstDatedMultiFileSink *sink = create_sink();
     FakeMultiFileSink *child = get_child_sink(sink);
     gchar *location = NULL;
     gboolean post_messages = FALSE;
@@ -340,7 +340,7 @@ test_forwarded_properties(void)
                  "location", "segment-%03d.ts",
                  "index", 7,
                  "post-messages", TRUE,
-                 "next-file", GST_WS_MULTI_FILE_SINK_NEXT_MAX_DURATION,
+                 "next-file", GST_DATED_MULTI_FILE_SINK_NEXT_MAX_DURATION,
                  "max-files", 4u,
                  "max-file-size", (guint64) 4096,
                  "max-file-duration", (guint64) 123456,
@@ -361,7 +361,7 @@ test_forwarded_properties(void)
     g_assert_cmpstr(location, ==, "segment-%03d.ts");
     g_assert_cmpint(index, ==, 7);
     g_assert_true(post_messages);
-    g_assert_cmpint(next_file, ==, GST_WS_MULTI_FILE_SINK_NEXT_MAX_DURATION);
+    g_assert_cmpint(next_file, ==, GST_DATED_MULTI_FILE_SINK_NEXT_MAX_DURATION);
     g_assert_cmpuint(max_files, ==, 4);
     g_assert_cmpuint(max_file_size, ==, 4096);
     g_assert_cmpuint(max_file_duration, ==, 123456);
@@ -370,7 +370,7 @@ test_forwarded_properties(void)
     g_assert_cmpstr(child->location, ==, "segment-%03d.ts");
     g_assert_cmpint(child->index, ==, 7);
     g_assert_true(child->post_messages);
-    g_assert_cmpint(child->next_file, ==, GST_WS_MULTI_FILE_SINK_NEXT_MAX_DURATION);
+    g_assert_cmpint(child->next_file, ==, GST_DATED_MULTI_FILE_SINK_NEXT_MAX_DURATION);
     g_assert_cmpuint(child->max_files, ==, 4);
     g_assert_cmpuint(child->max_file_size, ==, 4096);
     g_assert_cmpuint(child->max_file_duration, ==, 123456);
@@ -384,7 +384,7 @@ test_forwarded_properties(void)
 static void
 test_template_expansion(void)
 {
-    GstWsMultiFileSink *sink = create_sink();
+    GstDatedMultiFileSink *sink = create_sink();
     FakeMultiFileSink *child = get_child_sink(sink);
     gchar *expanded;
     const gchar *prefix = "clips/{camera}-";
@@ -422,22 +422,22 @@ test_template_expansion(void)
 static void
 test_template_helper_edges(void)
 {
-    GstWsMultiFileSink *sink = create_sink();
+    GstDatedMultiFileSink *sink = create_sink();
     gchar *formatted_index;
     gchar *expanded;
 
-    formatted_index = gst_ws_multi_file_sink_format_index(5, NULL);
+    formatted_index = gst_dated_multi_file_sink_format_index(5, NULL);
     g_assert_cmpstr(formatted_index, ==, "5");
     g_free(formatted_index);
 
-    formatted_index = gst_ws_multi_file_sink_format_index(5, "abc");
+    formatted_index = gst_dated_multi_file_sink_format_index(5, "abc");
     g_assert_cmpstr(formatted_index, ==, "5");
     g_free(formatted_index);
 
     g_free(sink->location_template);
     sink->location_template = g_strdup("literal-{unknown}-{{x}}-{index}-{index:04}-{timestamp:}");
 
-    expanded = gst_ws_multi_file_sink_expand_template(sink, 5);
+    expanded = gst_dated_multi_file_sink_expand_template(sink, 5);
 
     g_assert_nonnull(expanded);
     g_assert_nonnull(strstr(expanded, "literal-{unknown}-{x}-5-0005-"));
@@ -447,22 +447,22 @@ test_template_helper_edges(void)
 
     g_free(sink->location_template);
     sink->location_template = NULL;
-    g_assert_null(gst_ws_multi_file_sink_expand_template(sink, 5));
+    g_assert_null(gst_dated_multi_file_sink_expand_template(sink, 5));
 
     sink->location_template = g_strdup("{timestamp}");
-    expanded = gst_ws_multi_file_sink_expand_template(sink, 5);
+    expanded = gst_dated_multi_file_sink_expand_template(sink, 5);
     g_assert_nonnull(expanded);
     g_assert_cmpuint(strlen(expanded), ==, strlen("20260307T231053"));
     g_free(expanded);
 
     sink->location_template = g_strdup("{timestamp:%Q}");
-    expanded = gst_ws_multi_file_sink_expand_template(sink, 5);
+    expanded = gst_dated_multi_file_sink_expand_template(sink, 5);
     g_assert_nonnull(expanded);
     g_assert_cmpuint(strlen(expanded), ==, strlen("20260307T231053"));
     g_free(expanded);
 
     sink->location_template = g_strdup("prefix-{index");
-    expanded = gst_ws_multi_file_sink_expand_template(sink, 5);
+    expanded = gst_dated_multi_file_sink_expand_template(sink, 5);
     g_assert_cmpstr(expanded, ==, "prefix-{index");
     g_free(expanded);
 
@@ -472,7 +472,7 @@ test_template_helper_edges(void)
 static void
 test_clear_template_restores_location_pattern(void)
 {
-    GstWsMultiFileSink *sink = create_sink();
+    GstDatedMultiFileSink *sink = create_sink();
     FakeMultiFileSink *child = get_child_sink(sink);
 
     g_object_set(sink,
@@ -493,7 +493,7 @@ test_handle_message_reposts_when_enabled(void)
 {
     GstElement *pipeline;
     GstBus *bus;
-    GstWsMultiFileSink *sink = create_sink();
+    GstDatedMultiFileSink *sink = create_sink();
     FakeMultiFileSink *child = get_child_sink(sink);
     GstMessage *message;
     GstMessage *forwarded;
@@ -513,7 +513,7 @@ test_handle_message_reposts_when_enabled(void)
                           "filename", G_TYPE_STRING, "file-00.bin",
                           "index", G_TYPE_INT, 0,
                           NULL));
-    gst_ws_multi_file_sink_handle_message(GST_BIN(sink), message);
+    gst_dated_multi_file_sink_handle_message(GST_BIN(sink), message);
 
     g_assert_cmpstr(child->location, ==, "file-01.bin");
 
@@ -537,7 +537,7 @@ test_handle_message_swallow_and_passthrough(void)
 {
     GstElement *pipeline;
     GstBus *bus;
-    GstWsMultiFileSink *sink = create_sink();
+    GstDatedMultiFileSink *sink = create_sink();
     FakeMultiFileSink *child = get_child_sink(sink);
     GstMessage *message;
     GstMessage *other_message;
@@ -550,14 +550,14 @@ test_handle_message_swallow_and_passthrough(void)
 
     message = gst_message_new_element(GST_OBJECT(child),
         gst_structure_new_empty("GstMultiFileSink"));
-    gst_ws_multi_file_sink_handle_message(GST_BIN(sink), message);
+    gst_dated_multi_file_sink_handle_message(GST_BIN(sink), message);
 
     g_assert_cmpstr(child->location, ==, "chunk-1.bin");
     g_assert_null(gst_bus_timed_pop_filtered(bus, 0, GST_MESSAGE_ELEMENT));
 
     other_message = gst_message_new_element(GST_OBJECT(sink),
         gst_structure_new_empty("OtherMessage"));
-    gst_ws_multi_file_sink_handle_message(GST_BIN(sink), other_message);
+    gst_dated_multi_file_sink_handle_message(GST_BIN(sink), other_message);
 
     gst_object_unref(bus);
     gst_object_unref(child);
@@ -568,13 +568,13 @@ test_handle_message_swallow_and_passthrough(void)
 static void
 test_factory_failure_and_invalid_properties(void)
 {
-    GstWsMultiFileSink *sink;
+    GstDatedMultiFileSink *sink;
     GValue value = G_VALUE_INIT;
     GParamSpec *pspec = g_param_spec_int("invalid", "invalid", "invalid", 0, 1, 0, G_PARAM_READWRITE);
 
     ensure_gstreamer();
     test_factory_make_should_fail = TRUE;
-    sink = GST_WS_MULTI_FILE_SINK(g_object_new(GST_TYPE_WS_MULTI_FILE_SINK, NULL));
+    sink = GST_DATED_MULTI_FILE_SINK(g_object_new(GST_TYPE_DATED_MULTI_FILE_SINK, NULL));
 
     g_assert_null(sink->multifilesink);
     g_assert_null(gst_element_get_static_pad(GST_ELEMENT(sink), "sink"));
@@ -582,7 +582,7 @@ test_factory_failure_and_invalid_properties(void)
     g_object_set(sink,
                  "location", "",
                  "location-template", "chunk-{index}.bin",
-                 "next-file", GST_WS_MULTI_FILE_SINK_NEXT_KEY_FRAME,
+                 "next-file", GST_DATED_MULTI_FILE_SINK_NEXT_KEY_FRAME,
                  "max-files", 2u,
                  "max-file-size", (guint64) 22,
                  "max-file-duration", (guint64) 33,
@@ -593,8 +593,8 @@ test_factory_failure_and_invalid_properties(void)
     g_value_set_int(&value, 1);
 
     g_test_log_set_fatal_handler(allow_invalid_property_warning, NULL);
-    gst_ws_multi_file_sink_set_property(G_OBJECT(sink), 999, &value, pspec);
-    gst_ws_multi_file_sink_get_property(G_OBJECT(sink), 999, &value, pspec);
+    gst_dated_multi_file_sink_set_property(G_OBJECT(sink), 999, &value, pspec);
+    gst_dated_multi_file_sink_get_property(G_OBJECT(sink), 999, &value, pspec);
     g_test_log_set_fatal_handler(NULL, NULL);
 
     g_value_unset(&value);
@@ -605,11 +605,11 @@ test_factory_failure_and_invalid_properties(void)
 static void
 test_child_without_sink_pad(void)
 {
-    GstWsMultiFileSink *sink;
+    GstDatedMultiFileSink *sink;
 
     ensure_gstreamer();
     test_fake_child_has_sink_pad = FALSE;
-    sink = GST_WS_MULTI_FILE_SINK(g_object_new(GST_TYPE_WS_MULTI_FILE_SINK, NULL));
+    sink = GST_DATED_MULTI_FILE_SINK(g_object_new(GST_TYPE_DATED_MULTI_FILE_SINK, NULL));
 
     g_assert_nonnull(sink->multifilesink);
     g_assert_null(gst_element_get_static_pad(GST_ELEMENT(sink), "sink"));
@@ -620,11 +620,11 @@ test_child_without_sink_pad(void)
 static void
 test_ghost_pad_creation_failure(void)
 {
-    GstWsMultiFileSink *sink;
+    GstDatedMultiFileSink *sink;
 
     ensure_gstreamer();
     test_ghost_pad_new_should_fail = TRUE;
-    sink = GST_WS_MULTI_FILE_SINK(g_object_new(GST_TYPE_WS_MULTI_FILE_SINK, NULL));
+    sink = GST_DATED_MULTI_FILE_SINK(g_object_new(GST_TYPE_DATED_MULTI_FILE_SINK, NULL));
 
     g_assert_nonnull(sink->multifilesink);
     g_assert_null(gst_element_get_static_pad(GST_ELEMENT(sink), "sink"));
@@ -637,16 +637,16 @@ main(int argc, char **argv)
 {
     g_test_init(&argc, &argv, NULL);
 
-    g_test_add_func("/wsmultifilesink/defaults-and-properties", test_defaults_and_properties);
-    g_test_add_func("/wsmultifilesink/forwarded-properties", test_forwarded_properties);
-    g_test_add_func("/wsmultifilesink/template-expansion", test_template_expansion);
-    g_test_add_func("/wsmultifilesink/template-helper-edges", test_template_helper_edges);
-    g_test_add_func("/wsmultifilesink/clear-template-restores-location-pattern", test_clear_template_restores_location_pattern);
-    g_test_add_func("/wsmultifilesink/handle-message-reposts-when-enabled", test_handle_message_reposts_when_enabled);
-    g_test_add_func("/wsmultifilesink/handle-message-swallow-and-passthrough", test_handle_message_swallow_and_passthrough);
-    g_test_add_func("/wsmultifilesink/factory-failure-and-invalid-properties", test_factory_failure_and_invalid_properties);
-    g_test_add_func("/wsmultifilesink/child-without-sink-pad", test_child_without_sink_pad);
-    g_test_add_func("/wsmultifilesink/ghost-pad-creation-failure", test_ghost_pad_creation_failure);
+    g_test_add_func("/datedmultifilesink/defaults-and-properties", test_defaults_and_properties);
+    g_test_add_func("/datedmultifilesink/forwarded-properties", test_forwarded_properties);
+    g_test_add_func("/datedmultifilesink/template-expansion", test_template_expansion);
+    g_test_add_func("/datedmultifilesink/template-helper-edges", test_template_helper_edges);
+    g_test_add_func("/datedmultifilesink/clear-template-restores-location-pattern", test_clear_template_restores_location_pattern);
+    g_test_add_func("/datedmultifilesink/handle-message-reposts-when-enabled", test_handle_message_reposts_when_enabled);
+    g_test_add_func("/datedmultifilesink/handle-message-swallow-and-passthrough", test_handle_message_swallow_and_passthrough);
+    g_test_add_func("/datedmultifilesink/factory-failure-and-invalid-properties", test_factory_failure_and_invalid_properties);
+    g_test_add_func("/datedmultifilesink/child-without-sink-pad", test_child_without_sink_pad);
+    g_test_add_func("/datedmultifilesink/ghost-pad-creation-failure", test_ghost_pad_creation_failure);
 
     return g_test_run();
 }

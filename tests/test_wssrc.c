@@ -40,7 +40,7 @@ gst_element_register_wssink(GstPlugin *plugin)
 }
 
 gboolean
-gst_element_register_wsmultifilesink(GstPlugin *plugin)
+gst_element_register_datedmultifilesink(GstPlugin *plugin)
 {
     (void) plugin;
     return TRUE;
