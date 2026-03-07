@@ -44,6 +44,28 @@ The plugin is built as `build/gstwsplugin.so`.
 
 ---
 
+## Test
+
+Configure and run the native test suite:
+
+```bash
+cmake -S . -B build -DBUILD_TESTING=ON
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
+
+Generate the coverage report with the same build directory:
+
+```bash
+CC=gcc cmake -S . -B build -DBUILD_TESTING=ON -DENABLE_COVERAGE=ON
+cmake --build build
+cmake --build build --target coverage
+```
+
+The coverage target writes `build/coverage.txt` and `build/coverage.xml` and fails if the production code in `src/` drops below 100% line coverage.
+
+---
+
 ## Install
 
 ### Option A — session only (no copy needed)
@@ -312,6 +334,12 @@ GST_DEBUG=wssrc:7,wssink:7 gst-launch-1.0 ...
 ```
 
 GStreamer debug levels: `1`=ERROR `2`=WARN `3`=FIXME `4`=INFO `5`=DEBUG `6`=LOG `7`=TRACE
+
+---
+
+## Continuous Integration
+
+GitHub Actions runs the build, test suite, and coverage gate on every push and pull request. The workflow uses the same CMake targets documented above, so local verification and CI stay aligned.
 
 ---
 
