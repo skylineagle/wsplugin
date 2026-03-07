@@ -24,6 +24,7 @@ endif()
 
 set(SOURCES
     src/gstwsplugin.c
+    src/gstwsmultifilesink.c
     src/gstwssrc.c
     src/gstwssink.c
 )
@@ -133,8 +134,38 @@ if(BUILD_TESTING)
         PACKAGE="gstwsplugin"
     )
 
+    add_executable(test_wsmultifilesink
+        tests/test_wsmultifilesink.c
+    )
+
+    target_include_directories(test_wsmultifilesink PRIVATE
+        ${GST_INCLUDE_DIRS}
+        ${GST_BASE_INCLUDE_DIRS}
+        src
+    )
+
+    target_link_libraries(test_wsmultifilesink PRIVATE
+        ${GST_LIBRARIES}
+        ${GST_BASE_LIBRARIES}
+    )
+
+    target_link_directories(test_wsmultifilesink PRIVATE
+        ${GST_LIBRARY_DIRS}
+        ${GST_BASE_LIBRARY_DIRS}
+    )
+
+    target_compile_options(test_wsmultifilesink PRIVATE
+        ${GST_CFLAGS_OTHER}
+        ${GST_BASE_CFLAGS_OTHER}
+    )
+
+    target_compile_definitions(test_wsmultifilesink PRIVATE
+        PACKAGE="gstwsplugin"
+    )
+
     add_test(NAME test_wssrc COMMAND test_wssrc)
     add_test(NAME test_wssink COMMAND test_wssink)
+    add_test(NAME test_wsmultifilesink COMMAND test_wsmultifilesink)
 
     if(ENABLE_COVERAGE)
         find_program(GCOVR_EXECUTABLE gcovr)

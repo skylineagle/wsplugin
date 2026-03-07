@@ -3,6 +3,7 @@
 #endif
 
 #include "gstwsplugin.h"
+#include "gstwsmultifilesink.h"
 #include "gstwssrc.h"
 #include "gstwssink.h"
 
@@ -30,6 +31,7 @@ plugin_init (GstPlugin * plugin)
 {
     gboolean ret = TRUE;
 
+    ret &= GST_ELEMENT_REGISTER (wsmultifilesink, plugin);
     ret &= GST_ELEMENT_REGISTER (wssrc, plugin);
     ret &= GST_ELEMENT_REGISTER (wssink, plugin);
 
@@ -40,7 +42,7 @@ GST_PLUGIN_DEFINE (
     GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     wsplugin,
-    "WebSocket source and sink elements",
+    "WebSocket source, sink, and enhanced multifile sink elements",
     plugin_init,
     "1.0.0",
     "LGPL",

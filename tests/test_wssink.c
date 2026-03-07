@@ -28,6 +28,13 @@ gst_element_register_wssrc(GstPlugin *plugin)
     return TRUE;
 }
 
+gboolean
+gst_element_register_wsmultifilesink(GstPlugin *plugin)
+{
+    (void) plugin;
+    return TRUE;
+}
+
 #define gst_buffer_map fake_gst_buffer_map
 #define gst_buffer_unmap fake_gst_buffer_unmap
 #include "../src/gstwsplugin.c"
