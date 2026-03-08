@@ -217,7 +217,7 @@ allow_invalid_property_warning(const gchar *log_domain, GLogLevelFlags log_level
 
 #define gst_element_factory_make fake_gst_element_factory_make
 #define gst_ghost_pad_new fake_gst_ghost_pad_new
-#include "../src/gstwsmultifilesink.c"
+#include "../src/gstdatedmultifilesink.c"
 #undef gst_element_factory_make
 #undef gst_ghost_pad_new
 

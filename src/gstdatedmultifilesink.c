@@ -4,7 +4,7 @@
 
 #include <string.h>
 
-#include "gstwsmultifilesink.h"
+#include "gstdatedmultifilesink.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_dated_multi_file_sink_debug);
 #define GST_CAT_DEFAULT gst_dated_multi_file_sink_debug

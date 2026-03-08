@@ -3,7 +3,7 @@
 #endif
 
 #include "gstwsplugin.h"
-#include "gstwsmultifilesink.h"
+#include "gstdatedmultifilesink.h"
 #include "gstwssrc.h"
 #include "gstwssink.h"
 

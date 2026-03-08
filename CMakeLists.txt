@@ -24,7 +24,7 @@ endif()
 
 set(SOURCES
     src/gstwsplugin.c
-    src/gstwsmultifilesink.c
+    src/gstdatedmultifilesink.c
     src/gstwssrc.c
     src/gstwssink.c
 )
@@ -135,7 +135,7 @@ if(BUILD_TESTING)
     )
 
     add_executable(test_datedmultifilesink
-        tests/test_wsmultifilesink.c
+        tests/test_datedmultifilesink.c
     )
 
     target_include_directories(test_datedmultifilesink PRIVATE
