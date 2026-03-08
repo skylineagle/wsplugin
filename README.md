@@ -10,6 +10,7 @@ A GStreamer plugin that lets you publish and receive binary media frames (JPEG, 
 |---------|-----------|------|
 | `wssrc` | `GstPushSrc` | Receives WebSocket binary messages and pushes them as GStreamer buffers |
 | `wssink` | `GstBaseSink` | Takes GStreamer buffers and sends each one as a binary WebSocket message |
+| `datedmultifilesink` | `GstBin` | Wraps `multifilesink` and adds timestamp-aware file naming templates |
 
 Both elements support two connection modes:
 
@@ -92,6 +93,7 @@ Verify the plugin loaded:
 ```bash
 gst-inspect-1.0 wssrc
 gst-inspect-1.0 wssink
+gst-inspect-1.0 datedmultifilesink
 ```
 
 ---
@@ -118,6 +120,49 @@ The caps advertised on the src pad are negotiated with the downstream element �
 ### `wssink` — WebSocket Sink
 
 Receives a `GstBuffer` from upstream and sends its entire contents as a single binary WebSocket message. In server mode it maintains a per-client send queue (depth 16) and drops frames for any client that falls more than 16 frames behind.
+
+### `datedmultifilesink` — Enhanced Multi-file Sink
+
+`datedmultifilesink` preserves the stock `multifilesink` rolling-file behavior and adds timestamp-aware output naming through a declarative template.
+
+Core rolling properties are mirrored directly:
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `location` | string | `%05d` | Standard `multifilesink` location pattern used when `location-template` is not set |
+| `index` | int | `0` | Starting file index |
+| `next-file` | enum | `buffer` | File rollover strategy |
+| `max-files` | uint | `0` | Maximum number of files to retain |
+| `max-file-size` | uint64 | `2147483648` | Maximum file size before rollover |
+| `max-file-duration` | uint64 | `GST_CLOCK_TIME_NONE` | Maximum file duration before rollover |
+| `aggregate-gops` | bool | `false` | Keep GOPs together for key-frame-based splitting |
+| `post-messages` | bool | `false` | Re-post `GstMultiFileSink` file-written messages from `datedmultifilesink` |
+
+Additional naming properties:
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `location-template` | string | unset | Template for generated output paths |
+| `timestamp-utc` | bool | `false` | Use UTC instead of local time for timestamp expansion |
+
+Supported `location-template` tokens:
+
+- `{timestamp}` → current file creation time formatted as `%Y%m%dT%H%M%S`
+- `{timestamp:%Y-%m-%d_%H-%M-%S}` → custom `strftime`-style timestamp format
+- `{index}` → current file index
+- `{index:05}` → zero-padded file index width
+- `{{` and `}}` → literal braces
+
+Example:
+
+```bash
+gst-launch-1.0 \
+  wssrc mode=client uri=ws://127.0.0.1:8765 ! \
+  datedmultifilesink next-file=max-duration max-file-duration=5000000000 \
+    location-template="capture-{timestamp:%Y%m%d-%H%M%S}-{index:03}.mjpeg"
+```
+
+`datedmultifilesink` follows the same container limitations as `multifilesink`: it is suitable for independently decodable buffers or streamable container formats. For independently playable MP4 segment files, prefer `splitmuxsink`.
 
 ---
 
@@ -246,6 +291,15 @@ Play it back later:
 gst-launch-1.0 \
   filesrc location=capture.mjpeg ! \
   jpegparse ! jpegdec ! videoconvert ! autovideosink
+```
+
+Split the stream into timestamped files instead:
+
+```bash
+gst-launch-1.0 \
+  wssrc mode=client uri=ws://192.168.1.10:8765 ! \
+  datedmultifilesink next-file=max-duration max-file-duration=5000000000 \
+    location-template="capture-{timestamp:%Y%m%d-%H%M%S}-{index:03}.mjpeg"
 ```
 
 ---

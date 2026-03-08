@@ -39,6 +39,13 @@ gst_element_register_wssink(GstPlugin *plugin)
     return TRUE;
 }
 
+gboolean
+gst_element_register_datedmultifilesink(GstPlugin *plugin)
+{
+    (void) plugin;
+    return TRUE;
+}
+
 #define gst_pad_peer_query_caps fake_gst_pad_peer_query_caps
 #define gst_base_src_set_caps fake_gst_base_src_set_caps
 #include "../src/gstwsplugin.c"
